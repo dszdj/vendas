@@ -10,7 +10,7 @@
     "dev:backend": "dotenv -e .env -- npm run start:dev --workspace backend",
     "dev:frontend": "dotenv -e .env -- npm run dev --workspace frontend",
     "backup": "npm run backup --workspace backend",
-    "backup:schedule": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\backups\\install-backup-task.ps1",
+    "backup:schedule": "node backups/schedule-backup.cjs",
     "build": "npm run build --workspace backend && npm run build --workspace frontend"
   },
   "devDependencies": {

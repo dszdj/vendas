@@ -1,0 +1,74 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": "Nano_Banana2",
+      "images": [
+        "24",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "save"
+    }
+  },
+  "16": {
+    "inputs": {
+      "image": "Screenshot_1.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "product"
+    }
+  },
+  "24": {
+    "inputs": {
+      "prompt": [
+        "27",
+        0
+      ],
+      "model": "Nano Banana 2 (Gemini 3.1 Flash Image)",
+      "model.aspect_ratio": "auto",
+      "model.resolution": "1K",
+      "model.thinking_level": "MINIMAL",
+      "seed": 1096851153705473,
+      "response_modalities": "IMAGE",
+      "system_prompt": "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests.",
+      "temperature": 1,
+      "top_p": 0.95,
+      "model.images.image_1": [
+        "16",
+        0
+      ],
+      "model.images.image_2": [
+        "25",
+        0
+      ]
+    },
+    "class_type": "GeminiNanoBanana2V2",
+    "_meta": {
+      "title": "Nano Banana 2"
+    },
+    "extra_data": {
+    "api_key_comfy_org": "comfyui-454932a2b7e87aefa16dcb7282c8879aec1eeaaf2e758aa26ffcf037e2f12827"
+  }
+  },
+  "25": {
+    "inputs": {
+      "image": "733619214822587.webp"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "ref"
+    }
+  },
+  "27": {
+    "inputs": {
+      "value": ""
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "prompt"
+    }
+  }
+}

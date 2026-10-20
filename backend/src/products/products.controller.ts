@@ -3,6 +3,8 @@ import { IsOptional, IsString, MaxLength } from "class-validator";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import type { Response } from "express";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { Roles } from "../auth/roles.decorator";
+import { RolesGuard } from "../auth/roles.guard";
 import { CreateProductDto, UpdateProductDto } from "./product.dto";
 import { ProductsService } from "./products.service";
 
@@ -33,7 +35,8 @@ class ProductImagesSyncBody {
 }
 
 @Controller("products")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles("vendedor", "superadmin")
 export class ProductsController {
   constructor(private readonly products: ProductsService) {}
 

@@ -3,8 +3,8 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const maxImageBytes = 4 * 1024 * 1024;
-const maxProductImages = 4;
+const maxImageBytes = 10 * 1024 * 1024;
+const maxProductImages = 1;
 
 type ImageFile = { file: File; url: string };
 type GeneratedImage = { mimeType: string; data: string };
@@ -50,12 +50,12 @@ export default function ImageStudio({ onUnauthorized }: { onUnauthorized: () => 
 
     const invalidFile = files.find((file) => !isSupportedImage(file) || file.size > maxImageBytes);
     if (invalidFile) {
-      setNotice("Use imagens JPEG, PNG ou WebP de até 4 MB cada.");
+      setNotice("Use imagens JPEG, PNG ou WebP de até 10 MB cada.");
       setNoticeIsError(true);
       return;
     }
     if (kind === "product" && productImages.length + files.length > maxProductImages) {
-      setNotice(`Adicione no máximo ${maxProductImages} fotos do produto.`);
+      setNotice("Este workflow aceita uma foto do produto por geração.");
       setNoticeIsError(true);
       return;
     }
@@ -94,8 +94,8 @@ export default function ImageStudio({ onUnauthorized }: { onUnauthorized: () => 
     setResult(null);
 
     const formData = new FormData();
-    productImages.forEach(({ file }) => formData.append("productImages", file));
-    formData.append("referenceImage", referenceImage.file);
+    productImages.forEach(({ file }) => formData.append("product", file));
+    formData.append("ref", referenceImage.file);
     formData.append("prompt", prompt);
 
     try {
@@ -151,13 +151,12 @@ export default function ImageStudio({ onUnauthorized }: { onUnauthorized: () => 
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                multiple
                 disabled={productImages.length >= maxProductImages || loading}
                 onChange={(event) => acceptImages(event, "product")}
               />
               <span className="studio-upload-icon" aria-hidden="true">＋</span>
-              <strong>Adicionar fotos da peça</strong>
-              <span>JPEG, PNG ou WebP · até 4 MB cada</span>
+              <strong>Adicionar foto da peça</strong>
+              <span>Uma imagem · JPEG, PNG ou WebP · até 10 MB</span>
             </label>
             {productImages.length > 0 && (
               <div className="studio-preview-grid">
@@ -191,25 +190,25 @@ export default function ImageStudio({ onUnauthorized }: { onUnauthorized: () => 
                 />
                 <span className="studio-upload-icon" aria-hidden="true">▧</span>
                 <strong>Adicionar foto de referência</strong>
-                <span>Uma imagem · JPEG, PNG ou WebP · até 4 MB</span>
+                <span>Uma imagem · JPEG, PNG ou WebP · até 10 MB</span>
               </label>
             )}
           </div>
         </div>
 
-        <label className="studio-prompt-label" htmlFor="image-prompt">Personalize o resultado <span>opcional</span></label>
+        <label className="studio-prompt-label" htmlFor="image-prompt">Prompt de personalização <span>opcional</span></label>
         <textarea
           id="image-prompt"
           className="studio-prompt"
           maxLength={1500}
-          placeholder="Ex.: ensaio editorial ao ar livre, luz suave de fim de tarde..."
+          placeholder="Escreva exatamente o que você quer gerar..."
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
           disabled={loading}
           rows={3}
         />
         <div className="studio-prompt-footer">
-          <span>O workflow Nano Banana preserva a referência e aplica nela os detalhes da peça.</span>
+          <span>Seu texto será enviado exatamente como foi escrito, sem instruções adicionais.</span>
           <button className="button button-dark studio-generate-button" type="button" onClick={() => void generateImage()} disabled={!productImages.length || !referenceImage || loading}>
             {loading ? <><span className="studio-spinner" aria-hidden="true" /> Criando imagem...</> : <><span aria-hidden="true">✦</span> Gerar imagem</>}
           </button>

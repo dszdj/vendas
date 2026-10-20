@@ -14,7 +14,7 @@ async function createBackup(): Promise<void> {
     ? configuredPath
     : isAbsolute(configuredPath)
       ? configuredPath
-      : resolve(process.cwd(), configuredPath);
+      : resolve(__dirname, "..", configuredPath);
   if (sourcePath === ":memory:") {
     throw new Error("Não é possível fazer backup de um banco SQLite em memória.");
   }
@@ -26,8 +26,15 @@ async function createBackup(): Promise<void> {
   const backupDirectory = configuredBackupDirectory
     ? isAbsolute(configuredBackupDirectory)
       ? configuredBackupDirectory
-      : resolve(process.cwd(), configuredBackupDirectory)
-    : join(process.env.LOCALAPPDATA || homedir(), "AuraStudio", "backups");
+      : resolve(__dirname, "../../", configuredBackupDirectory)
+    : join(
+      process.env.LOCALAPPDATA
+        || (process.platform === "win32" ? join(homedir(), "AppData", "Local") : undefined)
+        || process.env.XDG_DATA_HOME
+        || (process.platform === "darwin" ? join(homedir(), "Library", "Application Support") : join(homedir(), ".local", "share")),
+      "AuraStudio",
+      "backups",
+    );
 
   const rawRetention = process.env.BACKUP_RETENTION_DAYS ?? "14";
   const retentionDays = Number(rawRetention);

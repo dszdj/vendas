@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Aura Studio | Vendas e criação com IA",
-  description: "Gestão de produtos e criação de imagens de moda com IA no Aura Studio.",
+  title: "Delawear PY | Streetwear",
+  description: "Explore a coleção Delawear PY. Escolha sua peça e finalize seu pedido pelo WhatsApp.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

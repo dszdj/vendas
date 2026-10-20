@@ -5,7 +5,7 @@ import ImageStudio from "../image-studio";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-type User = { id: string; email: string };
+type User = { id: string; email: string; firstName: string; role: "normal" | "vendedor" | "superadmin" };
 
 export default function ImagesPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -17,11 +17,16 @@ export default function ImagesPage() {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
       .then(async (response) => {
         if (response.status === 401) {
-          window.location.replace("/");
+          window.location.replace("/acesso?returnTo=%2Fimagens-ia");
           return null;
         }
         if (!response.ok) throw new Error("Não foi possível validar sua sessão.");
-        return response.json() as Promise<User>;
+        const profile = await response.json() as User;
+        if (profile.role === "normal") {
+          window.location.replace("/");
+          return null;
+        }
+        return profile;
       })
       .then((profile) => {
         if (active && profile) setUser(profile);
@@ -71,11 +76,12 @@ export default function ImagesPage() {
           <div><strong>Aura Studio</strong><span>Gestão de estoque</span></div>
         </div>
         <div className="sidebar-section-label">MENU PRINCIPAL</div>
-        <a className="sidebar-link" href="/" title="Produtos e estoque"><span className="nav-icon">▤</span> Produtos &amp; estoque</a>
+        <a className="sidebar-link" href="/painel-administrativo" title="Produtos e estoque"><span className="nav-icon">▤</span> Produtos &amp; estoque</a>
         <a className="sidebar-link active" href="/imagens-ia" aria-current="page" title="Imagens com IA"><span className="nav-icon">✳</span> Imagens com IA</a>
+        <a className="sidebar-link" href="/" title="Abrir loja pública"><span className="nav-icon">↗</span> Abrir loja</a>
         <div className="sidebar-footer">
           <div className="avatar">{user.email.slice(0, 1).toUpperCase()}</div>
-          <div className="user-details"><strong>{user.email}</strong><span>Administrador</span></div>
+          <div className="user-details"><strong>{user.firstName || user.email}</strong><span>{user.role === "superadmin" ? "Superadmin" : "Vendedor"}</span></div>
           <button className="icon-button" type="button" onClick={() => void logout()} title="Sair" aria-label="Sair">↪</button>
         </div>
       </aside>
@@ -84,7 +90,7 @@ export default function ImagesPage() {
           <div><p className="eyebrow">ESTÚDIO DE CRIAÇÃO</p><h1>Imagens com IA</h1></div>
         </header>
         {loadError && <div className="studio-notice studio-notice-error" role="status">{loadError}</div>}
-        <ImageStudio onUnauthorized={() => window.location.replace("/")} />
+        <ImageStudio onUnauthorized={() => window.location.replace("/acesso?returnTo=%2Fimagens-ia")} />
       </section>
     </main>
   );

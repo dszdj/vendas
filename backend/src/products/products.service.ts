@@ -48,6 +48,19 @@ interface ProductInput {
 export class ProductsService {
   constructor(private readonly sqlite: SqliteService) {}
 
+  findStorefrontProducts() {
+    return this.findAll().map((product) => ({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      size: product.size,
+      color: product.color,
+      price: product.price,
+      stock: product.stock,
+      images: product.images,
+    }));
+  }
+
   findAll(search = ""): ReturnType<typeof toProduct>[] {
     const query = search.trim().toLocaleLowerCase("pt-BR");
     const records = query

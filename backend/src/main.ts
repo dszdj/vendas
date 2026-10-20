@@ -5,6 +5,7 @@ import { NestFactory } from "@nestjs/core";
 import { isEmail } from "class-validator";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+import { resolve } from "node:path";
 import { AuthService } from "./auth/auth.service";
 
 function validateEnvironment(): void {
@@ -23,17 +24,24 @@ function validateEnvironment(): void {
   if (!isEmail(process.env.ADMIN_EMAIL ?? "")) {
     throw new Error("ADMIN_EMAIL precisa ser um endereço de e-mail válido.");
   }
+  const backendPort = Number(process.env.BACKEND_PORT ?? 4000);
+  const frontendPort = Number(process.env.FRONTEND_PORT ?? 3000);
+  for (const [name, port] of [["BACKEND_PORT", backendPort], ["FRONTEND_PORT", frontendPort]] as const) {
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      throw new Error(`${name} deve ser um número inteiro entre 1 e 65535.`);
+    }
+  }
 }
 
 async function bootstrap(): Promise<void> {
-  config({ path: "../.env" });
+  config({ path: resolve(__dirname, "../../.env") });
   validateEnvironment();
   const { AppModule } = await import("./app.module");
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? "http://localhost:3000",
+    origin: process.env.FRONTEND_URL ?? `http://localhost:${process.env.FRONTEND_PORT ?? "3000"}`,
     credentials: true,
   });
   app.setGlobalPrefix("api");
@@ -45,7 +53,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
   await app.init();
   await app.get(AuthService).initializeAdmin();
-  await app.listen(Number(process.env.PORT ?? 4000), "0.0.0.0");
+  await app.listen(Number(process.env.BACKEND_PORT ?? 4000), "0.0.0.0");
 }
 
 void bootstrap();
