@@ -1,0 +1,27 @@
+{
+  "name": "aura-vendas",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "dotenv -e .env -- npm run start:dev --workspace backend",
+    "dev:frontend": "dotenv -e .env -- npm run dev --workspace frontend",
+    "backup": "npm run backup --workspace backend",
+    "backup:schedule": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\backups\\install-backup-task.ps1",
+    "build": "npm run build --workspace backend && npm run build --workspace frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "dotenv-cli": "^8.0.0"
+  },
+  "overrides": {
+    "@nestjs/common": "12.2.0",
+    "@nestjs/core": "12.2.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
+  }
+}
