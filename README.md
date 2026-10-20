@@ -6,30 +6,58 @@ Inclui autenticação com senhas armazenadas por bcrypt, sessão em cookie HTTP-
 
 ## Requisitos
 
-- Windows 10/11.
-- Node.js 22 ou superior (este projeto usa o módulo nativo `better-sqlite3`).
-- npm.
+- Node.js 22 ou superior e npm.
+- Linux (Debian/Ubuntu), Windows 10/11 ou macOS.
+- No Linux, ferramentas de compilação para o módulo nativo `better-sqlite3`: `build-essential`, `python3`, `make` e `g++`.
 
-## Executar localmente
+## Executar no Linux
 
-Abra o PowerShell na pasta do projeto:
+No Debian ou Ubuntu, instale as ferramentas de compilação e Node.js 22. Por exemplo, se o Node.js estiver instalado pelo `nvm`:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential python3 make g++
+nvm install 22
+nvm use 22
+```
+
+Na pasta do projeto, crie e configure o arquivo de ambiente:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Configure `JWT_SECRET` com pelo menos 32 bytes, `ADMIN_EMAIL` com o e-mail da conta superadmin inicial e `ADMIN_PASSWORD` com uma senha de 12–72 bytes. `FRONTEND_PORT` e `BACKEND_PORT` definem as portas da aplicação (padrões 3000 e 4000). `DATABASE_PATH=../data/aura-vendas.db` grava o banco em `data/` na raiz do projeto; caminhos relativos de banco são resolvidos a partir da pasta `backend`, independentemente do diretório de onde o processo é iniciado.
+
+Instale as dependências e inicie em desenvolvimento:
+
+```bash
+npm ci
+npm run dev
+```
+
+Abra `http://localhost:<FRONTEND_PORT>`. Para executar a versão de produção, compile uma vez com `npm run build` e inicie o backend e o frontend em terminais separados com `npm run start --workspace backend` e `npm run start --workspace frontend`. O backend cria automaticamente as tabelas, o arquivo SQLite e a conta superadmin configurada por `ADMIN_EMAIL` e `ADMIN_PASSWORD`. Não é necessário aplicar migrações separadamente ou instalar PostgreSQL. Pressione `Ctrl+C` nos terminais para parar os processos.
+
+## Executar no Windows
+
+No PowerShell, abra a pasta do projeto e crie o arquivo de ambiente:
 
 ```powershell
-cd C:\Users\tiago\vendas
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 notepad .env
 ```
 
-Configure `JWT_SECRET` com pelo menos 32 bytes, `ADMIN_EMAIL` com o e-mail da conta superadmin inicial e `ADMIN_PASSWORD` com uma senha de 12–72 bytes. `FRONTEND_PORT` e `BACKEND_PORT` definem as portas da aplicação (padrões 3000 e 4000). `DATABASE_PATH=../data/aura-vendas.db` já grava o banco na pasta `data` do projeto; em desenvolvimento, o backend é executado a partir da pasta `backend`.
-
-Depois, instale as dependências e inicie:
+Configure as mesmas variáveis indicadas acima, depois instale e inicie:
 
 ```powershell
-npm install
+npm ci
 npm run dev
 ```
 
-Abra `http://localhost:<FRONTEND_PORT>`. O backend cria automaticamente as tabelas, o arquivo SQLite e a conta superadmin configurada por `ADMIN_EMAIL` e `ADMIN_PASSWORD`. O frontend deriva a URL da API de `BACKEND_PORT`; em hospedagens com domínios diferentes, configure `FRONTEND_URL` e `NEXT_PUBLIC_API_URL` com as URLs públicas correspondentes. Não é necessário aplicar migrações separadamente ou instalar PostgreSQL. Deixe o PowerShell aberto enquanto utiliza o sistema; pressione `Ctrl+C` para parar.
+## Configuração de produção
+
+O frontend deriva a URL da API de `BACKEND_PORT`. Em hospedagens com domínios diferentes, configure `FRONTEND_URL` e `NEXT_PUBLIC_API_URL` com as URLs públicas correspondentes; publique a aplicação por HTTPS. Os processos devem ser executados pelo usuário do serviço, com permissão de escrita na pasta `data/` e no destino dos backups. Não exponha diretamente a porta do backend se um proxy reverso estiver encaminhando as requisições.
 
 ## Loja pública
 
@@ -43,11 +71,12 @@ Clientes podem criar uma conta em `/acesso` informando nome, e-mail, senha, tele
 
 - Banco de dados: `data/aura-vendas.db` dentro da pasta do projeto. O SQLite também pode criar os arquivos `data/aura-vendas.db-wal` e `data/aura-vendas.db-shm` enquanto o backend está em execução.
 - As imagens são salvas no próprio SQLite e incluídas nos backups. Cada produto aceita até 6 imagens JPEG, PNG ou WebP; arquivos originais de até 50 MB são convertidos no navegador para WebP com no máximo 4 MB antes do envio. A imagem marcada como principal aparece na miniatura do catálogo.
-- `npm run backup` cria uma cópia consistente do banco em `%LOCALAPPDATA%\AuraStudio\backups`. `better-sqlite3` usa a API de backup do SQLite, inclusive quando o banco principal está aberto.
-- `npm run backup:schedule` agenda uma cópia diária às 03:00 no Agendador de Tarefas do Windows, para o usuário atual. O computador precisa estar ligado para executar a tarefa.
+- `npm run backup` cria uma cópia consistente do banco com a API de backup do SQLite, inclusive quando o banco principal está aberto. Por padrão, os backups ficam em `%LOCALAPPDATA%\AuraStudio\backups` no Windows, em `$XDG_DATA_HOME/AuraStudio/backups` no Linux (ou `~/.local/share/AuraStudio/backups` se `XDG_DATA_HOME` não estiver definido) e em `~/Library/Application Support/AuraStudio/backups` no macOS. `BACKUP_DIR` pode definir outro destino; caminhos relativos são resolvidos a partir da raiz do projeto.
+- `npm run backup:schedule` agenda uma cópia diária às 03:00 para o usuário atual: usa o Agendador de Tarefas no Windows e o crontab do usuário no Linux. No Linux, o serviço cron precisa estar instalado e ativo, e o processo precisa ter acesso ao crontab. O computador precisa estar ligado para executar a tarefa.
+- No Debian/Ubuntu, instale e ative o serviço cron se ainda não estiver disponível: `sudo apt-get install -y cron && sudo systemctl enable --now cron`.
+- Para remover o agendamento, execute `npm run backup:schedule -- --uninstall`.
 - Para definir a retenção dos backups, configure `BACKUP_RETENTION_DAYS` em `.env` (padrão de 14 dias).
-- Para remover o agendamento: `powershell -NoProfile -ExecutionPolicy Bypass -File .\backups\install-backup-task.ps1 -Uninstall`.
-- Restauração manual: pare o backend, preserve uma cópia do banco atual e substitua `data\aura-vendas.db` por um arquivo `.db` de backup. Inicie novamente com `npm run dev`.
+- Restauração manual: pare o backend, preserve uma cópia do banco atual e substitua `data/aura-vendas.db` por um arquivo `.db` de backup. Inicie novamente com `npm run dev`.
 
 O backup protege contra exclusão ou corrupção lógica, mas cópias importantes também devem ser guardadas fora deste computador. A pasta `data/`, os bancos e os backups não devem ser adicionados ao controle de versão.
 
